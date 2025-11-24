@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # Redroid Android Emulator 1
+  redroid-1:
+    image: redroid/redroid:13.0.0-latest
+    privileged: true
+    ports:
+      - "5555:5555"
+    volumes:
+      - redroid-1-data:/data
+    command: |
+      androidboot.redroid_gpu_mode=auto
+      androidboot.redroid_width=1080
+      androidboot.redroid_height=1920
+      androidboot.redroid_dpi=480
+
+  # Redroid Android Emulator 2
+  redroid-2:
+    image: redroid/redroid:13.0.0-latest
+    privileged: true
+    ports:
+      - "5556:5555"
+    volumes:
+      - redroid-2-data:/data
+    command: |
+      androidboot.redroid_gpu_mode=auto
+      androidboot.redroid_width=1080
+      androidboot.redroid_height=1920
+      androidboot.redroid_dpi=480
+
+  # Redroid Android Emulator 3
+  redroid-3:
+    image: redroid/redroid:13.0.0-latest
+    privileged: true
+    ports:
+      - "5557:5555"
+    volumes:
+      - redroid-3-data:/data
+    command: |
+      androidboot.redroid_gpu_mode=auto
+      androidboot.redroid_gpu_mode=auto
+      androidboot.redroid_width=1080
+      androidboot.redroid_height=1920
+      androidboot.redroid_dpi=480
+
+  # Redis (optional - for session management)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  # SCWS Backend API
+  scws-backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "9001:9001"
+      - "9090:9090"
+    environment:
+      - ENV=development
+      - HOST=0.0.0.0
+      - PORT=9001
+      - ADB_HOST=127.0.0.1
+      - ADB_PORT=5037
+      - REDIS_HOST=redis
+      - LOG_LEVEL=DEBUG
+      - LOG_FORMAT=console
+    volumes:
+      - ../backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - redis
+      - redroid-1
+      - redroid-2
+      - redroid-3
+    network_mode: host
+
+volumes:
+  redroid-1-data:
+  redroid-2-data:
+  redroid-3-data:
+  redis-data:
